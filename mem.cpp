@@ -1,3 +1,9 @@
+# include "reg.h"
+# include <iostream>
+# include <vector>
+
+using namespace std;
+
 Memory :: Memory() // constructor just needed for access
     {}
 
