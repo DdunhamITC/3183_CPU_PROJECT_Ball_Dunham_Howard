@@ -33,7 +33,7 @@ void Memory :: calling(int loc) // calling data from register
         }
     }
 
-vector <int> Memory :: dec2_32BIN(int data) //
+vector <int> Memory :: dec2_32BIN(int data) // convert data to 32 bit binary
     {
                 vector <int> binaryNum; 
                 for (int i = 31; i >= 0; i--)
@@ -47,7 +47,7 @@ vector <int> Memory :: dec2_32BIN(int data) //
             return binaryNum;
     }
 
-void Memory :: resetREG()
+void Memory :: resetREG() // writes zeros to register or memory
     {
         for (int i = 0 ; i < size ; i++)
             {
@@ -58,7 +58,7 @@ void Memory :: resetREG()
             }
     }
 
-void Memory :: dispREGS()
+void Memory :: dispREGS() // displays register used for testing purposes only not for main processor
     {
         for (int i = 0 ; i < size ; i++)
             {
