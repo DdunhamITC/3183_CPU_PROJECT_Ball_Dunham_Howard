@@ -1,0 +1,108 @@
+using namespace std;
+#include <iostream>
+#include <vector>
+#include <cmath>
+
+vector <int> dectofp(float decnum){
+
+vector <int> fp;
+vector <int> mant;
+vector <int> exponbin;
+
+int inters = floor(abs(decnum));
+float frac = abs(decnum) - inters;
+int expon;
+int fprev;
+
+if(inters >= 1){
+    expon = -1;
+    while(inters >= 1){
+        fprev = inters % 2;
+        mant.insert(mant.begin(),fprev);
+        inters = inters / 2;
+        expon ++;
+    }
+
+
+
+    for(int i = 0; i < 23 - expon; i++){
+        frac = frac * 2;
+        if(frac >= 1){
+            frac--;
+            mant.push_back(1);
+        }else{
+            mant.push_back(0);
+        }
+    }
+
+}else{
+    expon = 0;
+    while(frac < 1){
+        frac = frac * 2;
+        expon--;
+    }
+    frac--;
+    mant.push_back(1);
+    for(int i = 0; i < 23 ; i++){
+        frac = frac * 2;
+        if(frac >= 1){
+            frac--;
+            mant.push_back(1);
+        }else{
+            mant.push_back(0);
+        }
+    }
+    
+}
+
+int expon1 = expon + 127;
+int exprev;
+for(int i = 0; i < 8; i++){
+        exprev = expon1 % 2;
+        exponbin.insert(exponbin.begin(),exprev);
+        expon1 = expon1 / 2;
+    }
+
+if(decnum < 0){
+    fp.push_back(1);
+}else{
+    fp.push_back(0);
+}
+
+for(int i = 0; i < exponbin.size(); i++){
+    fp.push_back(exponbin[i]);
+}
+for(int i = 1; i < mant.size(); i++){
+    fp.push_back(mant[i]);
+}
+
+/*    for(int i = 0; i < mant.size(); i++){
+        cout << mant[i] << " ";
+    }
+    
+    for(int i = 0; i < exponbin.size(); i++){
+        cout << exponbin[i] << " ";
+    }
+    
+    for(int i = 0; i < fp.size(); i++){
+        cout << fp[i] << " ";
+    }
+    cout << endl;
+*/
+
+return fp; 
+}
+
+
+
+int main()
+{
+    vector <int> fp;
+    fp = dectofp(-28.159);
+    
+    for(int i = 0; i < fp.size(); i++){
+        cout << fp[i] << " ";
+    }
+
+    return 0;
+}
