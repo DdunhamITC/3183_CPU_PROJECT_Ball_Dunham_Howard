@@ -4,7 +4,7 @@ using namespace std;
 #include <cmath>
 #include <iomanip>
 
-double fptodec(vector <int> fpin){
+float fptodec(vector <int> fpin){
 
 int sign;
 if(fpin[0] == 1)
@@ -21,7 +21,7 @@ if(fpin[0] == 1)
         exponpower--;
     }
     
-    double val;
+    float val;
     val = pow(2,expon);
     
     
