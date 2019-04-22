@@ -1,0 +1,31 @@
+using namespace std;
+#include <iostream>
+#include <vector>
+#include <cmath>
+#include <iomanip>
+
+vector <int> signextend(vector <int> num2extend){
+    for(int i = num2extend.size(); i < 32; i++){
+        num2extend.insert(num2extend.begin(),num2extend.at(0));
+    }
+    return num2extend;
+}
+
+int main(){
+    vector <int> shortnum;
+    vector <int> extendednum;
+    
+    for(int i = 0; i < 17; i ++){
+        shortnum.push_back(rand()%2);
+    }
+    for(int i = 0; i < shortnum.size(); i++){
+        cout << shortnum[i] << " ";
+    }
+    cout << endl;
+    
+    extendednum = signextend(shortnum);
+    
+    for(int i = 0; i < extendednum.size(); i++){
+        cout << extendednum[i] << " ";
+    }
+}
