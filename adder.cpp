@@ -45,6 +45,20 @@ vector <int> ADDandSUB(float inA,float inB, int sig)
         // step 2 pull out exponets
         int exA = expA(fpA,fpB);
         int exB = expB(fpA,fpB);
+        if (sig == 2) // for rounding floor and ceiling functions
+            {
+                int bitkill;
+                if (exA > 127)
+                    bitkill = exA - 127;
+                else if (exA < 127)
+                    bitkill = 127 - exA;
+                else
+                    bitkill = 0;
+                for (int i = 9; i < 32 ; i++)
+                    fpA[i+bitkill]=0;
+            }
+
+
         vector <int> mtA;
         vector <int> mtB;
         // step 3 pull out normalized manticas
