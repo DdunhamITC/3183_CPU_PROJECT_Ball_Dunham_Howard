@@ -45,7 +45,7 @@ vector <int> ADDandSUB(float inA,float inB, int sig)
         // step 2 pull out exponets
         int exA = expA(fpA,fpB);
         int exB = expB(fpA,fpB);
-        if (sig == 2) // for rounding floor and ceiling functions
+        if (sig == 2) // for rounding floor and ceiling
             {
                 int bitkill;
                 if (exA > 127)
