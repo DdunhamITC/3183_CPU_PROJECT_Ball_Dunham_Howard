@@ -1,0 +1,580 @@
+using namespace std;
+#include <iostream>
+#include <vector>
+#include <cmath>
+#include <iomanip>
+
+int cycle = 0;
+int stpprgm = 0;
+int regwrite = 0;
+int PC = 0;
+int register2write = 0;
+
+float reg[16] = {0};
+float memory[1024] = {0};
+
+vector <int> signextend(vector <int> num2extend){
+    for(int i = 0; i < 32; i++){
+        num2extend.insert(num2extend.begin(),num2extend.at(0));
+    }
+    return num2extend;
+}
+
+vector <int> dectofp(float decnum){
+
+vector <int> fp;
+vector <int> mant;
+vector <int> exponbin;
+
+int inters = floor(abs(decnum));
+float frac = abs(decnum) - inters;
+int expon;
+int fprev;
+
+if(inters >= 1){
+    expon = -1;
+    while(inters >= 1){
+        fprev = inters % 2;
+        mant.insert(mant.begin(),fprev);
+        inters = inters / 2;
+        expon ++;
+    }
+
+
+
+    for(int i = 0; i < 23 - expon; i++){
+        frac = frac * 2;
+        if(frac >= 1){
+            frac--;
+            mant.push_back(1);
+        }else{
+            mant.push_back(0);
+        }
+    }
+
+}else{
+    expon = 0;
+    while(frac < 1){
+        frac = frac * 2;
+        expon--;
+    }
+    frac--;
+    mant.push_back(1);
+    for(int i = 0; i < 23 ; i++){
+        frac = frac * 2;
+        if(frac >= 1){
+            frac--;
+            mant.push_back(1);
+        }else{
+            mant.push_back(0);
+        }
+    }
+    
+}
+
+int expon1 = expon + 127;
+int exprev;
+for(int i = 0; i < 8; i++){
+        exprev = expon1 % 2;
+        exponbin.insert(exponbin.begin(),exprev);
+        expon1 = expon1 / 2;
+    }
+
+if(decnum < 0){
+    fp.push_back(1);
+}else{
+    fp.push_back(0);
+}
+
+for(int i = 0; i < exponbin.size(); i++){
+    fp.push_back(exponbin[i]);
+}
+for(int i = 1; i < mant.size(); i++){
+    fp.push_back(mant[i]);
+}
+
+return fp; 
+}
+
+float fptodec(vector <int> fpin){
+
+int sign;
+if(fpin[0] == 1)
+    {     sign = -1;   }
+    else
+    {     sign = 1;    }
+    
+    int expon = -127;
+    
+    int exponpower = 7;
+    for(int i = 1; i < 9; i++)
+    {
+        expon = expon + fpin[i]*pow(2,exponpower);
+        exponpower--;
+    }
+    
+    float val;
+    val = pow(2,expon);
+    
+    for(int i = 9; i < 32; i++){
+        expon--;
+        val = val + (fpin[i]* pow(2,expon));
+        
+    }
+    
+    val = val * sign;
+    
+    return val;
+}
+
+float alu(int opnum, float decreg1, float decreg2){
+    
+    vector <int> fpreg1 = dectofp(decreg1);
+    vector <int> fpreg2 = dectofp(decreg2);
+    vector <int> fpresult;
+    float result = decreg1;
+    switch(opnum){
+        case 5:
+        // Add
+        break;
+        case 6:
+        // Subtract
+        break;
+        case 7:
+        // Negate
+        break;
+        case 8:
+        // Multiply
+        result = decreg1 * decreg2;
+        break;
+        case 9:
+        // Divide
+        result = decreg1 / decreg2;
+        break;
+        case 10:
+        // Floor
+        break;
+        case 11:
+        // Ceiling
+        break;
+        case 12:
+        // Round
+        break;
+        case 13:
+        // Abs
+        break;
+        case 14:
+        // Min
+        break;
+        case 15:
+        // Max
+        break;
+        case 16:
+        // Power
+        result = pow(decreg1,decreg2);
+        break;
+        case 17:
+        // Exponential
+        result = exp(decreg1);
+        break;
+        case 18:
+        // Square Root
+        result = sqrt(decreg1);
+        break;
+        case 24:
+        // And 
+        for(int i = 0; i < 32; i++){
+            fpresult.push_back(fpreg1[i] * fpreg2[i]);
+        }
+        break;
+        case 25:
+        // OR
+        for(int i = 0; i < 32; i++){
+            fpresult.push_back(max(fpreg1[i],fpreg2[i]));
+        }
+        break;
+        case 26:
+        // XOR
+        for(int i = 0; i < 32; i++){
+           if(fpreg1[i] == 0){
+               if(fpreg2[i] == 0){
+                    fpresult.push_back(0);
+                }else{
+                    fpresult.push_back(1);
+                }
+            }else{
+                if(fpreg2[i] == 0){
+                    fpresult.push_back(1);
+                }else{
+                    fpresult.push_back(0);
+                }   
+            }
+        }
+        break;
+        case 27:
+        // NOT
+        for(int i = 0; i < 32; i++){
+            if(fpreg1[i] == 0){
+                fpresult.push_back(1);
+            }else{
+                fpresult.push_back(0);
+            }
+        }
+        break;
+        case 28:
+        // NAND
+        for(int i = 0; i < 32; i++){
+            if((fpreg1[i]*fpreg2[i]) == 1){
+                fpresult.push_back(0);
+            }else{
+                fpresult.push_back(1);
+            }
+        }
+        break;
+        case 29:
+        // NOR
+        for(int i = 0; i < 32; i++){
+            if((fpreg1[i]==0) && (fpreg2[i]==0)){
+                fpresult.push_back(1);
+            }else{
+                fpresult.push_back(0);
+            }
+        }
+        break;
+        case 30:
+        // XNOR
+        for(int i = 0; i < 32; i++){
+            if(fpreg1[1] == 0){
+                if(fpreg2[i] == 0){
+                    fpresult.push_back(1);
+                }else{
+                    fpresult.push_back(0);
+                }
+            }else{
+                if(fpreg2[i] == 0){
+                    fpresult.push_back(0);
+                }else{
+                    fpresult.push_back(1);
+                }
+            }
+        }
+        break;
+        case 31:
+        // Shift Left
+        for(int i = 0; i < decreg2; i++){
+            fpreg1.push_back(0);
+        }
+        for(int i = 0; i < 32; i++){
+            fpresult.push_back(fpreg1[i + decreg2]);
+        }
+        fpresult.resize(32);
+        result = fptodec(fpresult);
+        break;
+        case 32:
+        // Shift Right
+        fpresult = fpreg1;
+        for(int i = 0; i < decreg2; i++){
+            fpresult.insert(fpresult.begin(),0);
+        }
+        fpresult.resize(32);
+        result = fptodec(fpresult);
+        break;
+        
+        default:
+        break;
+        
+    }
+    return result;
+}
+
+void execute(vector <int> instruction){
+    vector <int> control;
+    vector <int> ins2622;
+    vector <int> ins2117;
+    vector <int> ins1612;
+    vector <int> ins160;
+    
+    control.clear();
+    ins2622.clear();
+    ins2117.clear();
+    ins1612.clear();
+    ins160.clear();
+    
+    for(int i = 0; i < 5; i++){
+        control.push_back(instruction[i]);
+    }
+    for(int i = 5; i < 10; i++){
+        ins2622.push_back(instruction[i]);
+    }
+    for(int i = 10; i < 15; i++){
+        ins2117.push_back(instruction[i]);
+    }
+    for(int i = 15; i < 20; i++){
+        ins1612.push_back(instruction[i]);
+    }
+    for(int i = 15; i < 32; i++){
+        ins160.push_back(instruction[i]);
+    }
+    
+    
+    vector <int> fpimmediate = signextend(ins160);
+    float decimmediate = fptodec(fpimmediate);
+    
+    int cntrl = 1;
+    int dec2622 = 0;
+    int dec2117 = 0;
+    int dec1612 = 0;
+    
+    for(int i = 0; i < 5; i++){
+        cntrl = cntrl + control[4-i] * pow(2,i);
+        dec2622 = dec2622 + ins2622[4-i] * pow(2,i);
+        dec2117 = dec2117 + ins2117[4-i] * pow(2,i);
+        dec1612 = dec1612 + ins1612[4-i] * pow(2,i);
+    }
+    
+    int reg2loc   = 0;
+    int branchU   = 0;
+    int branchZ   = 0;
+    int branchN   = 0;
+    int mem2read  = 0;
+    int mem2reg   = 0;
+    int memwrite  = 0;
+    int alusrc    = 0;
+    regwrite      = 0;
+    
+    switch(cntrl){
+        case 1:
+        //SET
+        cycle = 1;
+        break;
+        case 2:
+        //LOAD
+        reg2loc = 1;
+        mem2read = 1;
+        mem2reg = 1;
+        alusrc = 1;
+        regwrite = 1;
+        break;
+        case 3:
+        //STORE
+        memwrite = 1;
+        alusrc = 1;
+        break;
+        case 4:
+        //MOVE
+        regwrite = 1;
+        break;
+        case 5:
+        // Add
+        regwrite = 1;
+        break;
+        case 6:
+        // Subtract
+        regwrite = 1;
+        break;
+        case 7:
+        // Negate
+        regwrite = 1;
+        break;
+        case 8:
+        // Multiply
+        regwrite = 1;
+        break;
+        case 9:
+        // Divide
+        regwrite = 1;
+        break;
+        case 10:
+        // Floor
+        regwrite = 1;
+        break;
+        case 11:
+        // Ceiling
+        regwrite = 1;
+        break;
+        case 12:
+        // Round
+        regwrite = 1;
+        break;
+        case 13:
+        // Abs
+        regwrite = 1;
+        break;
+        case 14:
+        // Min
+        regwrite = 1;
+        break;
+        case 15:
+        // Max
+        regwrite = 1;
+        break;
+        case 16:
+        // Power
+        regwrite = 1;
+        alusrc = 1;
+        break;
+        case 17:
+        // Exponential
+        regwrite = 1;
+        break;
+        case 18:
+        // Square Root
+        regwrite = 1;
+        break;
+        case 19:
+        //Branch Unconditional
+        branchU = 1;
+        break;
+        case 20:
+        //Branch Zero
+        branchZ = 1;
+        break;
+        case 21:
+        //Branch Neg
+        branchN = 1;
+        break;
+        case 22:
+        //No-op
+        
+        break;
+        case 23:
+        //HALT
+        stpprgm = 1;
+        break;
+        case 24:
+        // And 
+        regwrite = 1;
+        break;
+        case 25:
+        // OR
+        regwrite = 1;
+        break;
+        case 26:
+        // XOR
+        regwrite = 1;
+        break;
+        case 27:
+        // NOT
+        regwrite = 1;
+        break;
+        case 28:
+        // NAND
+        regwrite = 1;
+        break;
+        case 29:
+        // NOR
+        regwrite = 1;
+        case 30:
+        // XNOR
+        regwrite = 1;
+        break;
+        case 31:
+        // Shift Left
+        regwrite = 1;
+        alusrc = 1;
+        break;
+        case 32:
+        // Shift Right
+        regwrite = 1;
+        alusrc = 1;
+        break;
+        
+        default:
+        break;
+    }
+    
+    int readreg1 = dec2117;
+    int readreg2 = 0;
+    if(reg2loc == 0){
+        int readreg2 = dec1612;
+    }else{
+        int readreg2 = dec2622;
+    }
+    register2write = dec2622;
+    
+    float alusrc1 = reg[readreg1];
+    float alusrc2;
+    if(alusrc == 0){
+       alusrc2 = reg[readreg2]; 
+    }else{
+       alusrc2 = decimmediate;
+    }
+    
+    float aluresult = alu(cntrl, alusrc1, alusrc2);
+    
+    int branchneg = 0;
+    int branchzero = 0;
+    
+    if(aluresult < 0){
+        branchneg = 1;
+    }
+    if(aluresult == 0){
+        branchzero = 1;
+    }
+    
+    int aluresultint = aluresult /1;
+    if(memwrite == 1){
+        memory[aluresultint] = reg[readreg2];
+    }
+    if(regwrite == 1){
+        if(mem2reg == 1){
+            reg[register2write] = memory[aluresultint];
+        }else{
+            reg[register2write] = aluresult;
+        }
+    }
+    
+    if((branchU == 1 )||((branchzero * branchZ) == 1)||((branchneg * branchN) == 1)){
+        PC = PC + decimmediate;
+    }else{
+        PC += 4;
+    }
+}
+
+
+int main()
+{
+    for(int i = 0; i < 16; i++){
+        reg[i] = rand() % 1000;
+    }
+    for(int i = 0; i < 1024; i++){
+        memory[i] = rand() % 1000;
+    }
+    
+    int instructionset[12][8] = {{0,0,0,0,0,0,0,1},{1,0,0,0,0,0,0,0},{1,0,0,0,1,0,1,0},{1,0,0,0,1,0,1,0},
+                                 {0,1,0,0,1,0,0,0},{1,0,1,1,0,0,0,1},{1,0,0,0,0,0,0,0},{1,0,0,0,1,0,1,0},
+                                 {1,0,1,1,0,0,0,0},{1,0,1,1,0,0,0,1},{1,0,0,0,0,0,0,0},{1,0,0,0,1,0,1,0}};
+    int instructionread[32];
+    vector <int> insorset;
+    while(stpprgm == 0){
+        int k = 0;
+        for(int i = 0; i < 4; i++){
+            for(int j = 0; j < 8; j++){
+                instructionread[k] = instructionset[PC + i][j];
+                k++;
+            }
+        }
+        insorset.resize(0);
+        for(int i = 0; i < 32; i++){
+            insorset.push_back(instructionread[i]);
+        }
+        if(cycle == 0){
+            execute(insorset);
+        }else{
+            reg[register2write] = fptodec(insorset);
+            cycle = 0;
+            PC += 4;
+        }
+    }
+
+
+
+for(int i = 0; i < 16; i++){
+    cout << "Register " << i << " = " << reg[i] << endl;
+}
+cout << "cycle = " << cycle << endl;
+cout << "stpprgm = " << stpprgm << endl;
+cout << "register2write = "<< register2write << endl;
+cout << "PC = " << PC << endl;   
+    return 0;
+}
