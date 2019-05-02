@@ -8,8 +8,8 @@ vector <int> addCOMP(vector <int> fpa,vector <int> fpb )
         vector <int> a ;
         vector <int> b ;
 
-        fpa = dectofp(8);
-        fpb = dectofp(8);
+        //fpa = dectofp(8);
+        //fpb = dectofp(8);
 
         
 
