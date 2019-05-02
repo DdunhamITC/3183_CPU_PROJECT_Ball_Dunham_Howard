@@ -1,0 +1,15 @@
+vector <int> fpMax (vector <int > flra, vector <int > flrb)
+    {   
+        vector <int > flr;
+        
+        flrb[0]=1;
+        flr=addCOMP(flra,flrb);
+        if (flr[0]==0)
+            return flra;
+        else
+        {
+            return flrb;
+        }
+        
+        
+    }
